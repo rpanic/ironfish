@@ -11,6 +11,7 @@ export const SuccessfullyMinedRequestSchema: yup.ObjectSchema<SuccessfullyMinedR
   .object({
     randomness: yup.number().defined(),
     miningRequestId: yup.number().defined(),
+    user: yup.string().defined()
   })
   .defined()
 export const SuccessfullyMinedResponseSchema: yup.MixedSchema<SuccessfullyMinedResponse> = yup
@@ -25,6 +26,7 @@ router.register<typeof SuccessfullyMinedRequestSchema, SuccessfullyMinedResponse
       await node.miningDirector.successfullyMined(
         request.data.randomness,
         request.data.miningRequestId,
+        request.data.user
       )
     }
 

@@ -442,7 +442,7 @@ export class MiningDirector {
    *
    * @param randomness The randomness to be set for the new block
    */
-  async successfullyMined(randomness: number, miningRequestId: number): Promise<MINED_RESULT> {
+  async successfullyMined(randomness: number, miningRequestId: number, user: string): Promise<MINED_RESULT> {
     const block = this.recentBlocks.get(miningRequestId)
     if (!block) {
       return MINED_RESULT.UNKNOWN_REQUEST
