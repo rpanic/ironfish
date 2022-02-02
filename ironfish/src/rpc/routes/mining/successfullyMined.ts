@@ -4,7 +4,7 @@
 import * as yup from 'yup'
 import { ApiNamespace, router } from '../router'
 
-export type SuccessfullyMinedRequest = { randomness: number; miningRequestId: number }
+export type SuccessfullyMinedRequest = { randomness: number; miningRequestId: number, user: string }
 export type SuccessfullyMinedResponse = Record<string, never> | undefined
 
 export const SuccessfullyMinedRequestSchema: yup.ObjectSchema<SuccessfullyMinedRequest> = yup

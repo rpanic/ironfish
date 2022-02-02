@@ -26,6 +26,10 @@ export class Miner extends IronfishCommand {
       description:
         'number of CPU threads to use for mining. -1 will auto-detect based on number of CPU cores.',
     }),
+    poolUser: flags.string({
+      default: "default",
+      description: 'public key which is sent to the mining pool for reward distribution',
+    }),
   }
 
   async start(): Promise<void> {
@@ -43,6 +47,10 @@ export class Miner extends IronfishCommand {
     const batchSize = this.sdk.config.get('minerBatchSize')
     const miner = new IronfishMiner(flags.threads, batchSize)
 
+    const miningUser = flags.poolUser
+    
+    this.log("Mining on pool with user: " + miningUser)
+
     const successfullyMined = (request: MineRequest, randomness: number) => {
       this.log(
         `Submitting hash for block ${request.sequence} on request ${request.miningRequestId} (${randomness})`,
@@ -51,6 +59,7 @@ export class Miner extends IronfishCommand {
       const response = client.successfullyMined({
         randomness,
         miningRequestId: request.miningRequestId,
+        user: miningUser
       })
 
       response.waitForEnd().catch(() => {

@@ -123,6 +123,8 @@ export type ConfigOptions = {
    * The number of hashes processed by miner per worker request.
    */
   minerBatchSize: number
+
+  poolUser: string
 }
 
 export const ConfigOptionsSchema: yup.ObjectSchema<Partial<ConfigOptions>> = yup
@@ -188,6 +190,7 @@ export class Config extends KeyStore<ConfigOptions> {
       generateNewIdentity: false,
       blocksPerMessage: 20,
       minerBatchSize: 10000,
+      poolUser: "default"
     }
   }
 }
