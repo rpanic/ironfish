@@ -30,6 +30,10 @@ export class Miner extends IronfishCommand {
       default: "default",
       description: 'public key which is sent to the mining pool for reward distribution',
     }),
+    worker: flags.string({
+      default: "default",
+      description: "Worker name, optional. Default: 'default'"
+    })
   }
 
   async start(): Promise<void> {
@@ -48,8 +52,9 @@ export class Miner extends IronfishCommand {
     const miner = new IronfishMiner(flags.threads, batchSize)
 
     const miningUser = flags.poolUser
+    const worker = flags.worker
     
-    this.log("Mining on pool with user: " + miningUser)
+    this.log("Mining on pool with user: " + miningUser + ", worker: " + worker)
 
     const successfullyMined = (request: MineRequest, randomness: number) => {
       this.log(
@@ -59,7 +64,8 @@ export class Miner extends IronfishCommand {
       const response = client.successfullyMined({
         randomness,
         miningRequestId: request.miningRequestId,
-        user: miningUser
+        user: miningUser,
+        worker: worker
       })
 
       response.waitForEnd().catch(() => {

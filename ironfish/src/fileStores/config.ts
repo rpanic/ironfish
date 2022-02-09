@@ -125,6 +125,7 @@ export type ConfigOptions = {
   minerBatchSize: number
 
   poolUser: string
+  worker: string
 }
 
 export const ConfigOptionsSchema: yup.ObjectSchema<Partial<ConfigOptions>> = yup
@@ -190,7 +191,8 @@ export class Config extends KeyStore<ConfigOptions> {
       generateNewIdentity: false,
       blocksPerMessage: 20,
       minerBatchSize: 10000,
-      poolUser: "default"
+      poolUser: "default",
+      worker: "default"
     }
   }
 }
