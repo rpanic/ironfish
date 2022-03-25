@@ -21,6 +21,7 @@ export class MiningPoolMiner {
   private stopResolve: (() => void) | null
 
   private readonly publicAddress: string
+  private readonly workername: string
 
   graffiti: Buffer | null
   miningRequestId: number
@@ -32,12 +33,14 @@ export class MiningPoolMiner {
     batchSize: number
     logger?: Logger
     publicAddress: string
+    workername: string
     host: string
     port: number
   }) {
     this.logger = options.logger ?? createRootLogger()
     this.graffiti = null
     this.publicAddress = options.publicAddress
+    this.workername = options.workername
     if (!isValidPublicAddress(this.publicAddress)) {
       throw new Error(`Invalid public address: ${this.publicAddress}`)
     }
@@ -48,6 +51,7 @@ export class MiningPoolMiner {
     this.stratum = new StratumClient({
       miner: this,
       publicAddress: this.publicAddress,
+      workername: this.workername,
       host: options.host,
       port: options.port,
     })

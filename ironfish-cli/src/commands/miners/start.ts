@@ -37,6 +37,11 @@ export class Miner extends IronfishCommand {
       char: 'a',
       description: 'the public address to receive pool payouts',
     }),
+    worker: Flags.string({
+      char: 'w',
+      default: 'default',
+      description: 'name of the worker'
+    }),
     richOutput: Flags.boolean({
       default: true,
       allowNo: true,
@@ -90,6 +95,7 @@ export class Miner extends IronfishCommand {
       const miner = new MiningPoolMiner({
         threadCount: flags.threads,
         publicAddress: flags.address,
+        workername: flags.worker,
         batchSize,
         host: host,
         port: port,

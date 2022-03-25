@@ -37,12 +37,14 @@ export class StratumClient {
   private nextMessageId: number
 
   private readonly publicAddress: string
+  private readonly workername: string
 
   private hashrateProvider: HashrateProvider | null = null
 
   constructor(options: {
     miner: MiningPoolMiner
     publicAddress: string
+    workername: string
     host: string
     port: number
     logger?: Logger
@@ -51,6 +53,7 @@ export class StratumClient {
     this.port = options.port
     this.miner = options.miner
     this.publicAddress = options.publicAddress
+    this.workername = options.workername
     this.logger = options.logger ?? createRootLogger()
 
     this.started = false
@@ -108,6 +111,7 @@ export class StratumClient {
   subscribe(): void {
     this.send('mining.subscribe', {
       publicAddress: this.publicAddress,
+      workername: this.workername
     })
   }
 

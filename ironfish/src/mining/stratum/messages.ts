@@ -11,6 +11,7 @@ export type StratumMessage = {
 
 export type MiningSubscribeMessage = {
   publicAddress: string
+  workername?: string
 }
 
 export type MiningSubmitMessage = {
