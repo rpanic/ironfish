@@ -41,6 +41,8 @@ export class StratumClient {
 
   private hashrateProvider: HashrateProvider | null = null
 
+  private hashrateProvider: HashrateProvider | null = null
+
   constructor(options: {
     miner: MiningPoolMiner
     publicAddress: string
