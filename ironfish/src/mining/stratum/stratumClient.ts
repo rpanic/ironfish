@@ -6,9 +6,12 @@ import { createRootLogger, Logger } from '../../logger'
 import { GraffitiUtils } from '../../utils/graffiti'
 import { SetTimeoutToken } from '../../utils/types'
 import { YupUtils } from '../../utils/yup'
+import { HashrateProvider } from '../hashrateprovider'
 import { MiningPoolMiner } from '../poolMiner'
 import { ServerMessageMalformedError } from './errors'
 import {
+  HashrateRequestSchema,
+  HashrateSubmitMessage,
   MiningNotifySchema,
   MiningSetTargetSchema,
   MiningSubmitMessage,
@@ -34,6 +37,8 @@ export class StratumClient {
   private nextMessageId: number
 
   private readonly publicAddress: string
+
+  private hashrateProvider: HashrateProvider | null = null
 
   constructor(options: {
     miner: MiningPoolMiner
@@ -117,8 +122,16 @@ export class StratumClient {
     return this.connected
   }
 
+  submitHashrate(requestId: number, hashrate: number) : void {
+    this.send('hashrate.submit', {
+      hashrateRequestId: requestId,
+      hashrate: hashrate
+    })
+  }
+
   private send(method: 'mining.submit', body: MiningSubmitMessage): void
   private send(method: 'mining.subscribe', body: MiningSubscribeMessage): void
+  private send(method: 'hashrate.submit', body: HashrateSubmitMessage): void
   private send(method: string, body?: unknown): void {
     if (!this.connected) {
       return
@@ -223,6 +236,25 @@ export class StratumClient {
 
           this.miner.waitForWork()
           break
+        }
+
+        case 'hashrate.subscribe': {
+
+          const body = await YupUtils.tryValidate(HashrateRequestSchema, header.result.body)
+
+          if (body.error) {
+            throw new ServerMessageMalformedError(body.error, header.result.method)
+          }
+
+          this.hashrateProvider = new HashrateProvider(body.result, this.miner.hashRate, this)
+          break
+        }
+
+        case 'hashrate.unsubscribe': {
+
+          this.hashrateProvider?.close()
+          break
+
         }
 
         default:

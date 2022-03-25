@@ -47,3 +47,4 @@ ironfish-cli/segfault.log
 
 # ironfish-graph-explorer
 ironfish-graph-explorer/src/data.json
+ironfish-cli/ironfish-*

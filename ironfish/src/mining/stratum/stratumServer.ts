@@ -11,10 +11,13 @@ import { SerializedBlockTemplate } from '../../serde/BlockTemplateSerde'
 import { GraffitiUtils, StringUtils } from '../../utils'
 import { ErrorUtils } from '../../utils/error'
 import { YupUtils } from '../../utils/yup'
+import { BackendConnection } from '../backendconnection'
 import { MiningPool } from '../pool'
 import { mineableHeaderString } from '../utils'
 import { ClientMessageMalformedError } from './errors'
 import {
+  HashrateRequestMessage,
+  HashrateSubmitSchema,
   MiningNotifyMessage,
   MiningSetTargetMessage,
   MiningSubmitSchema,
@@ -53,6 +56,8 @@ export class StratumServerClient {
   }
 }
 
+type HashrateConsumer = (hashrate: number) => void
+
 export class StratumServer {
   readonly server: net.Server
   readonly pool: MiningPool
@@ -69,6 +74,10 @@ export class StratumServer {
 
   currentWork: Buffer | null = null
   currentMiningRequestId: number | null = null
+
+  hashrateRequests: {id: number, client: StratumServerClient, callbacks: HashrateConsumer[]}[] = []
+
+  backendConnection: BackendConnection
 
   constructor(options: {
     pool: MiningPool
@@ -90,6 +99,9 @@ export class StratumServer {
     this.nextMessageId = 0
 
     this.server = net.createServer((s) => this.onConnection(s))
+
+    this.backendConnection = new BackendConnection()
+    this.backendConnection.listen(this)
   }
 
   start(): void {
@@ -212,12 +224,64 @@ export class StratumServer {
           break
         }
 
+        case 'hashrate.submit': {
+          const body = await YupUtils.tryValidate(HashrateSubmitSchema, header.result.body)
+
+          if (body.error) {
+            throw new ClientMessageMalformedError(client, body.error)
+          }
+
+          console.log("Received Hashrate: " + body.result.hashrate)
+          //TODO
+          this.hashrateRequests.filter(x => x.id === body.result.hashrateRequestId).forEach(x => x.callbacks.forEach(f => f(body.result.hashrate)))
+
+          break
+        }
+
         default:
           throw new ClientMessageMalformedError(
             client,
             `Invalid message ${header.result.method}`,
           )
       }
+    }
+  }
+
+  public subscribeHashrate(client: StratumServerClient, f: HashrateConsumer) : void{
+
+    let existing = this.hashrateRequests.filter(x => x.client == client)
+    if(existing.length > 0){
+
+      existing[0].callbacks.push(f)
+
+    }else{
+
+      let maxId = this.hashrateRequests.map(x => x.id).reduce((a, b) => a > b ? a : b, 0) + 1
+      this.hashrateRequests.push({ client: client, id: maxId, callbacks: [f] })
+      this.send(client, 'hashrate.subscribe', { hashrateRequestId: maxId, period: 1000 })
+    }
+
+  }
+
+  public cleanupHashrate(client: StratumServerClient, f: HashrateConsumer) : void {
+
+    let existing = this.hashrateRequests.filter(x => x.client == client)
+    if(existing.length > 0){
+
+      //Cleanup
+      if(existing[0].callbacks.length > 1){
+
+        existing[0].callbacks = existing[0].callbacks.filter(x => x != f)
+
+      }else{
+        //Remove subscription
+        console.log("Unsubscribing...")
+        this.send(existing[0].client, 'hashrate.unsubscribe', {})
+        this.hashrateRequests = this.hashrateRequests.filter(x => x != existing[0])
+      }
+
+    }else{
+      console.log("Something is wrong...")
     }
   }
 
@@ -280,6 +344,16 @@ export class StratumServer {
     client: StratumServerClient,
     method: 'mining.subscribed',
     body: MiningSubscribedMessage,
+  ): void
+  private send(
+    client: StratumServerClient,
+    method: 'hashrate.subscribe',
+    body: HashrateRequestMessage,
+  ): void
+  private send(
+    client: StratumServerClient,
+    method: 'hashrate.unsubscribe',
+    body: {},
   ): void
   private send(client: StratumServerClient, method: 'mining.wait_for_work'): void
   private send(client: StratumServerClient, method: string, body?: unknown): void {
