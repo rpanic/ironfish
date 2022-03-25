@@ -18,6 +18,16 @@ export type MiningSubmitMessage = {
   randomness: string
 }
 
+export type HashrateSubmitMessage = {
+  hashrateRequestId: number,
+  hashrate: number
+}
+
+export type HashrateRequestMessage = {
+  hashrateRequestId: number,
+  period: number
+}
+
 export type MiningSubscribedMessage = {
   clientId: number
   graffiti: string
@@ -76,5 +86,19 @@ export const MiningSubmitSchema: yup.ObjectSchema<MiningSubmitMessage> = yup
   .object({
     miningRequestId: yup.number().required(),
     randomness: yup.string().required(),
+  })
+  .required()
+
+export const HashrateSubmitSchema: yup.ObjectSchema<HashrateSubmitMessage> = yup
+  .object({
+    hashrateRequestId: yup.number().required(),
+    hashrate: yup.number().required()
+  })
+  .required()
+
+export const HashrateRequestSchema: yup.ObjectSchema<HashrateRequestMessage> = yup
+  .object({
+    hashrateRequestId: yup.number().required(),
+    period: yup.number().required()
   })
   .required()
