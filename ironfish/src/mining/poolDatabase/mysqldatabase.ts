@@ -31,7 +31,7 @@ export class MysqlDatabase {
         const poolFolder = fs.join(options.config.dataDir, '/pool')
         await fs.mkdir(poolFolder, { recursive: true })
 
-        const db = new MySqlConnector()
+        const db = new MySqlConnector(options.config)
         db.init();
 
         return new MysqlDatabase({
@@ -120,14 +120,17 @@ export class MySqlConnector {
 
     connection: mysql.Connection
 
-    constructor() {
+    constructor(config: Config) {
+
+        let params = config.get("mysqlParams").split(":")
+
+        console.log(`Logging in to DB with credentials ${params}`)
 
         this.connection = mysql.createConnection({
-            host: 'localhost',
-            // host: 'mina.rpanic.com',
-            user: 'root',
-            password: 'ethereum',
-            database: 'ironfish'
+            host: params[0],
+            user: params[1],
+            password: params[2],
+            database: params[3]
         });
         
     }
