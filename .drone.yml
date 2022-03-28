@@ -10,7 +10,8 @@ steps:
   - name: build
     image: plugins/docker
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - name: docker_sock
+      path: /var/run/docker.sock
     settings:
       repo: registry.rpanic.com/rpanic/pool-backend
       registry: registry.rpanic.com
@@ -23,6 +24,11 @@ steps:
 
 image_pull_secrets:
   - repo_login
+  
+volumes:
+- name: docker_sock
+  host:
+    path: /var/run/docker.sock
 
 trigger:
   branch:
