@@ -78,7 +78,7 @@ impl ThreadPoolHandler {
     #[allow(dead_code)]
     pub fn new_work(&mut self, header_bytes: Buffer, target: Buffer, mining_request_id: u32, randomness_start: i64) {
         let result = u64::try_from(randomness_start);
-        if(result.is_ok()){
+        if result.is_ok(){
             self.threadpool
                 .new_work(&header_bytes, &target, mining_request_id, result.ok().unwrap() as usize)
         }
