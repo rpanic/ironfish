@@ -28,7 +28,7 @@ echo "Inserting GIT hash into ironfish/package.json as gitHash"
 cat <<< "$(jq --arg gh "$GIT_HASH" '.gitHash = $gh' < ironfish/package.json)" > ironfish/package.json
 
 echo "Installing from lockfile"
-yarn --non-interactive --frozen-lockfile
+yarn --non-interactive
 
 echo "Building all projects"
 yarn build
@@ -49,7 +49,7 @@ tar zxvf packaged.tar.gz
 echo "Installing production node_modules"
 rm -rf ../../node_modules
 cd ../..
-yarn --non-interactive --frozen-lockfile --production
+yarn --non-interactive --production
 cd ironfish-cli/build.cli
 
 cd package
