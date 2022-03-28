@@ -133,7 +133,7 @@ export class MiningSoloMiner {
     headerBytes.set(this.graffiti, 176)
 
     this.waiting = false
-    this.threadPool.newWork(headerBytes, this.target, miningRequestId)
+    this.threadPool.newWork(headerBytes, this.target, miningRequestId, 0)
   }
 
   waitForWork(): void {
