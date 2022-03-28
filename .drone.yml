@@ -17,6 +17,7 @@ steps:
         from_secret: registry_username
       password:
         from_secret: registry_password
+      dockerfile: ironfish-cli/Dockerfile
 
 image_pull_secrets:
   - repo_login
