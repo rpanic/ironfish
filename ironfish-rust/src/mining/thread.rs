@@ -15,6 +15,7 @@ pub(crate) enum Command {
         Vec<u8>, // header bytes
         Vec<u8>, // target
         u32,     // mining request id
+        usize,   // randomness_start
     ),
     Stop,
     Pause,
@@ -57,9 +58,10 @@ impl Thread {
         header_bytes: Vec<u8>,
         target: Vec<u8>,
         mining_request_id: u32,
+        randomness_start: usize
     ) -> Result<(), SendError<Command>> {
         self.command_channel
-            .send(Command::NewWork(header_bytes, target, mining_request_id))
+            .send(Command::NewWork(header_bytes, target, mining_request_id, randomness_start))
     }
 
     pub(crate) fn pause(&self) -> Result<(), SendError<Command>> {
@@ -75,7 +77,7 @@ fn process_commands(
     work_receiver: Receiver<Command>,
     block_found_channel: Sender<(u64, u32)>,
     hash_rate_channel: Sender<u32>,
-    start: u64,
+    start_offset: u64,
     step_size: usize,
     default_batch_size: u64,
 ) {
@@ -89,8 +91,8 @@ fn process_commands(
 
         let command = commands.pop_front().unwrap();
         match command {
-            Command::NewWork(mut header_bytes, target, mining_request_id) => {
-                let mut batch_start = start;
+            Command::NewWork(mut header_bytes, target, mining_request_id, randomness_start) => {
+                let mut batch_start = randomness_start + start_offset;
                 loop {
                     let remaining_search_space = u64::MAX - batch_start;
                     let batch_size = if remaining_search_space > default_batch_size {

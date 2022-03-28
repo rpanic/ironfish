@@ -36,12 +36,12 @@ impl ThreadPool {
         }
     }
 
-    pub fn new_work(&mut self, header_bytes: &[u8], target: &[u8], mining_request_id: u32) {
+    pub fn new_work(&mut self, header_bytes: &[u8], target: &[u8], mining_request_id: u32, randomness_start: usize) {
         self.mining_request_id = mining_request_id;
 
         for thread in self.threads.iter() {
             thread
-                .new_work(header_bytes.to_vec(), target.to_vec(), mining_request_id)
+                .new_work(header_bytes.to_vec(), target.to_vec(), mining_request_id, randomness_start)
                 .unwrap();
         }
     }
