@@ -1,13 +1,14 @@
 FROM node:16.13.0-bullseye as build
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-COPY ./ ./
-
 RUN \
     apt-get update && \
     apt-get install jq rsync gcc cmake python -y && \
-    curl https://sh.rustup.rs -sSf | sh -s -- -y && \
-    ./ironfish-cli/scripts/build.sh
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+COPY ./ ./
+
+RUN ./ironfish-cli/scripts/build.sh
 
 FROM node:16.13.0-bullseye-slim
 EXPOSE 8020:8020

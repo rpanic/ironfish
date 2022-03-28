@@ -76,9 +76,9 @@ impl ThreadPoolHandler {
 
     #[napi]
     #[allow(dead_code)]
-    pub fn new_work(&mut self, header_bytes: Buffer, target: Buffer, mining_request_id: u32) {
+    pub fn new_work(&mut self, header_bytes: Buffer, target: Buffer, mining_request_id: u32, randomness_start: u64) {
         self.threadpool
-            .new_work(&header_bytes, &target, mining_request_id)
+            .new_work(&header_bytes, &target, mining_request_id, randomness_start as usize)
     }
 
     #[napi]
