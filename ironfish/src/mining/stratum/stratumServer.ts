@@ -33,6 +33,7 @@ export class StratumServerClient {
   connected: boolean
   subscribed: boolean
   publicAddress: string | null = null
+  workername: string | undefined = undefined
   graffiti: Buffer | null = null
 
   private constructor(options: { socket: net.Socket; id: number }) {
@@ -182,6 +183,7 @@ export class StratumServer {
           }
 
           client.publicAddress = body.result.publicAddress
+          client.workername = body.result.workername
           client.subscribed = true
 
           if (!isValidPublicAddress(client.publicAddress)) {
@@ -192,12 +194,20 @@ export class StratumServer {
             )
           }
 
+          if(client.workername != null && client.workername.length > 40){
+            throw new ClientMessageMalformedError(
+              client,
+              `Invalid worker name: ${client.workername.slice(0, 40)}...`,
+              header.result.method,
+            )
+          }
+
           const idHex = client.id.toString(16)
           const graffiti = `${this.pool.name}.${idHex}`
           Assert.isTrue(StringUtils.getByteLength(graffiti) <= GRAFFITI_SIZE)
           client.graffiti = GraffitiUtils.fromString(graffiti)
 
-          this.logger.info(`Miner ${idHex} connected`)
+          this.logger.info(`Miner ${idHex} with address ${client.publicAddress} and worker ${client.workername} connected`)
 
           this.send(client, 'mining.subscribed', { clientId: client.id, graffiti: graffiti })
           this.send(client, 'mining.set_target', this.getSetTargetMessage())
@@ -232,7 +242,7 @@ export class StratumServer {
           }
 
           console.log("Received Hashrate: " + body.result.hashrate)
-          //TODO
+          
           this.hashrateRequests.filter(x => x.id === body.result.hashrateRequestId).forEach(x => x.callbacks.forEach(f => f(body.result.hashrate)))
 
           break

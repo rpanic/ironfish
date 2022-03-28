@@ -80,6 +80,7 @@ export const MiningWaitForWorkSchema: yup.MixedSchema<MiningWaitForWorkMessage> 
 export const MiningSubscribeSchema: yup.ObjectSchema<MiningSubscribeMessage> = yup
   .object({
     publicAddress: yup.string().required(),
+    workername: yup.string().optional()
   })
   .required()
 

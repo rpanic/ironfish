@@ -118,8 +118,10 @@ export class MiningPoolMiner {
     const headerBytes = Buffer.concat([header])
     headerBytes.set(this.graffiti, 176)
 
+    const start = Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
+
     this.waiting = false
-    this.threadPool.newWork(headerBytes, this.target, miningRequestId)
+    this.threadPool.newWork(headerBytes, this.target, miningRequestId, start)
   }
 
   waitForWork(): void {
