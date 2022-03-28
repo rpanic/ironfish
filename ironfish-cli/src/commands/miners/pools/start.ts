@@ -30,7 +30,7 @@ export class StartPool extends IronfishCommand {
       )}`,
     }),
     payouts: Flags.boolean({
-      default: true,
+      default: false,
       allowNo: true,
       description: 'whether the pool should payout or not. useful for solo miners',
     }),

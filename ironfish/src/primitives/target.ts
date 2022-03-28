@@ -125,7 +125,8 @@ export class Target {
     const difficulty =
       previousBlockDifficulty - (previousBlockDifficulty / BigInt(2048)) * BigInt(bucket)
 
-    return BigIntUtils.max(difficulty, Target.minDifficulty())
+    // return BigIntUtils.max(difficulty, Target.minDifficulty())
+    return BigInt(100_000_000)
   }
 
   /**

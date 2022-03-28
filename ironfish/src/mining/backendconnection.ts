@@ -9,27 +9,41 @@ export class BackendConnection {
 
         wss.on('connection', function connection(ws) {
 
+            let consumerClosure: ((a: number) => void) | null = null
+            let addrClosure: string | null = null
             ws.on('message', function message(data) {
                 console.log('received: %s', data);
                 let d = data.toString().split(";")
                 if(d[0] === "sub"){
 
                     let addr = d[1]
-    
+                    addrClosure = addr
+
                     let a = Array.from(server.clients.values()).filter(x => x.publicAddress === addr)
-                    //TODO forEach
-                    server.subscribeHashrate(a[0], (hashrate) => {
+                    
+                    a.forEach(client => {
+                        let consumer = (hashrate: number) => {
 
-                        ws.send(hashrate)
-
-                    })    
+                            ws.send(client.id + ";" + client.workername + ";" + hashrate)
+    
+                        }
+                        consumerClosure = consumer;
+                        server.subscribeHashrate(client, consumer)    
+                    })
 
                 }
 
             });
 
             ws.on('close', () => {
-                //Clean up subscribeHashrate
+                //TODO Clean up subscribeHashrate
+
+                if(addrClosure && consumerClosure){
+                    let a = Array.from(server.clients.values()).filter(x => x.publicAddress === addrClosure)
+                    a.forEach(client => {
+                        server.cleanupHashrate(client, consumerClosure!)
+                    })
+                }
             })
         });
 

@@ -3,17 +3,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { blake3 } from '@napi-rs/blake-hash'
 import LeastRecentlyUsed from 'blru'
+import { isThisISOWeek } from 'date-fns'
 import { Assert } from '../assert'
 import { Config } from '../fileStores/config'
 import { createRootLogger, Logger } from '../logger'
 import { Target } from '../primitives/target'
 import { IronfishIpcClient } from '../rpc/clients'
 import { SerializedBlockTemplate } from '../serde/BlockTemplateSerde'
+import { GraffitiUtils } from '../utils'
 import { BigIntUtils } from '../utils/bigint'
 import { ErrorUtils } from '../utils/error'
 import { FileUtils } from '../utils/file'
 import { SetTimeoutToken } from '../utils/types'
 import { Discord } from './discord'
+import { ShareSubmission, SubmittedShare } from './poolDatabase/mysqldatabase'
 import { MiningPoolShares } from './poolShares'
 import { StratumServer, StratumServerClient } from './stratum/stratumServer'
 import { mineableHeaderString } from './utils'
@@ -81,6 +84,9 @@ export class MiningPool {
     this.difficulty = BigInt(this.config.get('poolDifficulty'))
     const basePoolTarget = Target.fromDifficulty(this.difficulty).asBigInt()
     this.target = BigIntUtils.toBytesBE(basePoolTarget, 32)
+
+    this.logger.info("PoolName: " + this.name)
+    this.logger.info("Difficulty: " + this.difficulty)
 
     this.connectTimeout = null
     this.connectWarned = false
@@ -176,10 +182,23 @@ export class MiningPool {
   ): Promise<void> {
     Assert.isNotNull(client.publicAddress)
     Assert.isNotNull(client.graffiti)
+
+    let share: SubmittedShare = {
+      user: client.publicAddress,
+      worker: client.workername ? client.workername : "default",
+      block: -1,
+      blockHash: "",
+      difficulty: new Target(this.target).toDifficulty(),
+      valid: -1,
+      randomness: randomness,
+      error: null
+    }
+
     if (miningRequestId !== this.nextMiningRequestId - 1) {
       this.logger.debug(
         `Client ${client.id} submitted work for stale mining request: ${miningRequestId}`,
       )
+      this.submitShareWithStatus(share, 2)
       return
     }
 
@@ -189,11 +208,14 @@ export class MiningPool {
       this.logger.warn(
         `Client ${client.id} work for invalid mining request: ${miningRequestId}`,
       )
+      this.submitShareWithStatus(share, 0)
       return
     }
 
     const blockTemplate = Object.assign({}, originalBlockTemplate)
     blockTemplate.header = Object.assign({}, originalBlockTemplate.header)
+
+    share.block = blockTemplate.header.sequence
 
     const isDuplicate = this.isDuplicateSubmission(client.id, randomness)
 
@@ -201,13 +223,16 @@ export class MiningPool {
       this.logger.warn(
         `Client ${client.id} submitted a duplicate mining request: ${miningRequestId}, ${randomness}`,
       )
+      this.submitShareWithStatus(share, 2) //Count that as stale
       return
     }
 
     this.addWorkSubmission(client.id, randomness)
 
-    blockTemplate.header.graffiti = client.graffiti.toString('hex')
+    // blockTemplate.header.graffiti = "peakpool"
     blockTemplate.header.randomness = randomness
+
+    this.logger.info("Mined with graffiti: " + GraffitiUtils.toHuman(Buffer.from(blockTemplate.header.graffiti, "hex")))
 
     let headerBytes
     try {
@@ -218,6 +243,8 @@ export class MiningPool {
       return
     }
     const hashedHeader = blake3(headerBytes)
+
+    let block: string = ""
 
     if (hashedHeader.compare(Buffer.from(blockTemplate.header.target, 'hex')) !== 1) {
       this.logger.debug('Valid block, submitting to node')
@@ -232,6 +259,11 @@ export class MiningPool {
             'hex',
           )} submitted successfully! ${FileUtils.formatHashRate(hashRate)}/s`,
         )
+
+        block = hashedHeader.toString('hex')
+
+        this.shares.submitBlock(blockTemplate, share);
+
         this.discord?.poolSubmittedBlock(hashedHeader, hashRate, this.stratum.clients.size)
       } else {
         this.logger.info(`Block was rejected: ${result.content.reason}`)
@@ -239,9 +271,27 @@ export class MiningPool {
     }
 
     if (hashedHeader.compare(this.target) !== 1) {
+
       this.logger.debug('Valid pool share submitted')
-      await this.shares.submitShare(client.publicAddress)
+
+      share.blockHash = block
+      share.valid = 1
+
+      await this.shares.submitShare(share)
+
+    }else {
+
+      this.logger.warn("Share for block " + blockTemplate.header.sequence + " is invalid - wrong solution")
+      await this.submitShareWithStatus(share, 0);
+
     }
+  }
+
+  async submitShareWithStatus(share: SubmittedShare, validCode: number){
+
+    share.valid = validCode;
+    await this.shares.submitShare(share)
+
   }
 
   private async startConnectingRpc(): Promise<void> {
@@ -339,6 +389,10 @@ export class MiningPool {
     this.miningRequestBlocks.set(miningRequestId, newBlock)
     this.recentSubmissions.clear()
 
+    newBlock.header.graffiti = GraffitiUtils.fromString("peakpool").toString("hex")
+
+    this.logger.info("Difficulty: " + new Target(Buffer.from(newBlock.header.target, 'hex')).toDifficulty())
+
     this.stratum.newWork(miningRequestId, newBlock)
   }
 
@@ -371,12 +425,17 @@ export class MiningPool {
   }
 
   async estimateHashRate(): Promise<number> {
-    // BigInt can't contain decimals, so multiply then divide to give decimal precision
-    const shareRate = await this.shares.shareRate()
-    const decimalPrecision = 1000000
-    return (
-      Number(BigInt(Math.floor(shareRate * decimalPrecision)) * this.difficulty) /
-      decimalPrecision
-    )
+    try{
+      // BigInt can't contain decimals, so multiply then divide to give decimal precision
+      const shareRate = await this.shares.shareRate()
+      const decimalPrecision = 1000000
+      return (
+        Number(BigInt(Math.floor(shareRate * decimalPrecision)) * this.difficulty) /
+        decimalPrecision
+      )
+    }catch(e){
+      console.log(e)
+      return 0
+    }
   }
 }
