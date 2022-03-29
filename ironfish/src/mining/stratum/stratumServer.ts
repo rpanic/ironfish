@@ -80,6 +80,8 @@ export class StratumServer {
 
   backendConnection: BackendConnection
 
+  enforcedGraffiti: string
+
   constructor(options: {
     pool: MiningPool
     config: Config
@@ -103,6 +105,8 @@ export class StratumServer {
 
     this.backendConnection = new BackendConnection()
     this.backendConnection.listen(this)
+
+    this.enforcedGraffiti = this.config.get("poolEnforcedGraffiti")
   }
 
   start(): void {
@@ -203,7 +207,7 @@ export class StratumServer {
           }
 
           const idHex = client.id.toString(16)
-          const graffiti = `${this.pool.name}.${idHex}`
+          const graffiti = this.enforcedGraffiti ? this.enforcedGraffiti : `${this.pool.name}.${idHex}`
           Assert.isTrue(StringUtils.getByteLength(graffiti) <= GRAFFITI_SIZE)
           client.graffiti = GraffitiUtils.fromString(graffiti)
 

@@ -52,6 +52,8 @@ export class MiningPool {
 
   recalculateTargetInterval: SetTimeoutToken | null
 
+  enforcedGraffiti: string
+
   constructor(options: {
     rpc: IronfishIpcClient
     shares: MiningPoolShares
@@ -93,6 +95,8 @@ export class MiningPool {
     this.started = false
 
     this.recalculateTargetInterval = null
+
+    this.enforcedGraffiti = this.config.get("poolEnforcedGraffiti")
   }
 
   static async init(options: {
@@ -389,7 +393,7 @@ export class MiningPool {
     this.miningRequestBlocks.set(miningRequestId, newBlock)
     this.recentSubmissions.clear()
 
-    newBlock.header.graffiti = GraffitiUtils.fromString("peakpool").toString("hex")
+    newBlock.header.graffiti = GraffitiUtils.fromString(this.enforcedGraffiti).toString("hex")
 
     this.logger.info("Difficulty: " + new Target(Buffer.from(newBlock.header.target, 'hex')).toDifficulty())
 
