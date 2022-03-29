@@ -6,7 +6,12 @@ RUN \
     apt-get install jq rsync gcc cmake python -y && \
     curl https://sh.rustup.rs -sSf | sh -s -- -y
 
+RUN apt-get install -y dos2unix
+
 COPY ./ ./
+
+RUN dos2unix ./ironfish-cli/scripts/entrypoint.sh ./ironfish-cli/scripts/build.sh
+RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 RUN ./ironfish-cli/scripts/build.sh
 
