@@ -55,6 +55,7 @@ export class MiningPoolShares {
     this.payoutInterval = null
 
     const webserver = new TransactionServer(this)
+    webserver.start();
     this.webserver = webserver
   }
 
