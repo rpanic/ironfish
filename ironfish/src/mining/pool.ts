@@ -236,7 +236,7 @@ export class MiningPool {
     // blockTemplate.header.graffiti = "peakpool"
     blockTemplate.header.randomness = randomness
 
-    this.logger.info("Mined with graffiti: " + GraffitiUtils.toHuman(Buffer.from(blockTemplate.header.graffiti, "hex")))
+    // this.logger.info("Mined with graffiti: " + GraffitiUtils.toHuman(Buffer.from(blockTemplate.header.graffiti, "hex")))
 
     let headerBytes
     try {
@@ -317,9 +317,9 @@ export class MiningPool {
       return
     }
 
-    if (this.connectWarned) {
-      this.discord?.poolConnected()
-    }
+    // if (this.connectWarned) {
+      // this.discord?.poolConnected()
+    // }
 
     this.connectWarned = false
     this.logger.info('Successfully connected to node')

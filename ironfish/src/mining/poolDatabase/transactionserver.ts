@@ -27,9 +27,10 @@ export class TransactionServer{
                             res.send(x)
                         }).catch(e => res.send(e))
 
+                    }else{
+                        res.status(500).send("Nothing sent")
                     }
 
-                    res.status(500).send("Nothing sent")
                 }else{
                     res.status(500).send("Fail")
                 }
@@ -63,8 +64,11 @@ export class TransactionServer{
                 console.log(e)
                 res.send("fail")
             }
+        })
 
-
+        app.post("/sendText", async (req, res) => {
+            let text = req.body["text"]?.toString()
+            this.node.discord?.sendText(text)
         })
 
         const hostname = '0.0.0.0';

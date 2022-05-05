@@ -185,7 +185,7 @@ export class MySqlConnector {
 
     insertBlock(block: SerializedBlockTemplate, submission: SubmittedShare) {
 
-        let fee = block.header.minersFee
+        let fee = parseInt(block.header.minersFee, 16).toString()
         // block.header.minersFee.fee().then(fee => {
         let hash = this.calculateHash(block);
 
@@ -252,6 +252,17 @@ export class MySqlConnector {
 
     close(){
         this.connection.end()
+    }
+
+    //Function that checks if the connection is still active. If not, it will reconnect.
+    async ping(){
+        try{
+            await this.connection.ping()
+        }catch(e){
+            console.log("Database connection lost. Reconnecting...")
+            this.connection = mysql.createConnection(this.connection.config)
+            this.init()
+        }
     }
 
 }
