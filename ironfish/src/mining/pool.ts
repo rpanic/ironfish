@@ -194,7 +194,7 @@ export class MiningPool {
       blockHash: "",
       difficulty: new Target(this.target).toDifficulty(),
       valid: -1,
-      randomness: randomness,
+      randomness: BigInt(randomness),
       error: null
     }
 

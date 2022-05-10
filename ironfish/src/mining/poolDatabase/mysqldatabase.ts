@@ -112,7 +112,7 @@ export type MineReq = { miningRequestId: number; bytes: Buffer; target: Target; 
 
 export type ShareSubmission = {randomness: number, requestId: number, user: string | undefined, worker: string | undefined}
 
-export type SubmittedShare = { user: string, worker: string, valid: number, randomness: number, block: number, blockHash: string, difficulty: bigint, error: string | null }
+export type SubmittedShare = { user: string, worker: string, valid: number, randomness: bigint, block: number, blockHash: string, difficulty: bigint, error: string | null }
 
 export type User = { address: string }
 
