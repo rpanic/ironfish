@@ -15,7 +15,7 @@ pub(crate) enum Command {
         Vec<u8>, // header bytes
         Vec<u8>, // target
         u32,     // mining request id
-        usize,   // randomness_start
+        u64,   // randomness_start
     ),
     Stop,
     Pause,
@@ -58,7 +58,7 @@ impl Thread {
         header_bytes: Vec<u8>,
         target: Vec<u8>,
         mining_request_id: u32,
-        randomness_start: usize
+        randomness_start: u64
     ) -> Result<(), SendError<Command>> {
         self.command_channel
             .send(Command::NewWork(header_bytes, target, mining_request_id, randomness_start))
