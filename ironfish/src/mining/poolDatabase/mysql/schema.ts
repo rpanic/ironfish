@@ -20,7 +20,6 @@ export class Schema{
                 randomness BIGINT,
                 block INT,
                 valid TINYINT,
-                target TEXT,
                 difficulty BIGINT,
                 timestamp BIGINT,
                 ip BIGINT UNSIGNED NULL,

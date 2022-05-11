@@ -245,7 +245,7 @@ export class StratumServer {
             throw new ClientMessageMalformedError(client, body.error)
           }
 
-          console.log("Received Hashrate: " + body.result.hashrate)
+          // console.log("Received Hashrate: " + body.result.hashrate)
           
           this.hashrateRequests.filter(x => x.id === body.result.hashrateRequestId).forEach(x => x.callbacks.forEach(f => f(body.result.hashrate)))
 

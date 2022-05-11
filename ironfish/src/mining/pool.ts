@@ -187,6 +187,8 @@ export class MiningPool {
     Assert.isNotNull(client.publicAddress)
     Assert.isNotNull(client.graffiti)
 
+    let r = randomness.startsWith("0x") ? BigInt(randomness) : BigInt("0x" + randomness)
+
     let share: SubmittedShare = {
       user: client.publicAddress,
       worker: client.workername ? client.workername : "default",
@@ -194,7 +196,7 @@ export class MiningPool {
       blockHash: "",
       difficulty: new Target(this.target).toDifficulty(),
       valid: -1,
-      randomness: BigInt(randomness),
+      randomness: r,
       error: null
     }
 

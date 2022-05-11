@@ -12,7 +12,7 @@ export class BackendConnection {
             let consumerClosure: ((a: number) => void) | null = null
             let addrClosure: string | null = null
             ws.on('message', function message(data) {
-                console.log('received: %s', data);
+                // console.log('received: %s', data);
                 let d = data.toString().split(";")
                 if(d[0] === "sub"){
 
