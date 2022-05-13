@@ -80,7 +80,7 @@ impl ThreadPoolHandler {
         let result = u64::try_from(randomness_start);
         if result.is_ok(){
             self.threadpool
-                .new_work(&header_bytes, &target, mining_request_id, result.ok().unwrap() as usize)
+                .new_work(&header_bytes, &target, mining_request_id, result.ok().unwrap())
         }
     }
 

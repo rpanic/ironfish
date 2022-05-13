@@ -36,7 +36,7 @@ impl ThreadPool {
         }
     }
 
-    pub fn new_work(&mut self, header_bytes: &[u8], target: &[u8], mining_request_id: u32, randomness_start: usize) {
+    pub fn new_work(&mut self, header_bytes: &[u8], target: &[u8], mining_request_id: u32, randomness_start: u64) {
         self.mining_request_id = mining_request_id;
 
         for thread in self.threads.iter() {
