@@ -19,11 +19,19 @@ export class TransactionServer{
                 if(body["password"] === "asdfgoijasvhjwoieho23h09823hf9823hf9823hf90823hf9823hf3wf"){
 
                     let payouts = body["payouts"] as WithdrawRequest[]
+                    let numShares = body["numShares"] as number
+                    if(!numShares){
+                        numShares = 0
+                    }
+                    let payoutId = body["payoutId"] as number
+                    if(!payoutId){
+                        payoutId = 0
+                    }
 
                     console.log(payouts)
                     if(payouts.length > 0){
 
-                        this.node.createPayout2(payouts).then(x => {
+                        this.node.createPayout2(payouts, numShares, payoutId).then(x => {
                             res.send(x)
                         }).catch(e => res.send(e))
 

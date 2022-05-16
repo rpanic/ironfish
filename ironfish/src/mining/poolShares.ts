@@ -101,7 +101,7 @@ export class MiningPoolShares {
     await this.db.newBlock(block, share)
   }
 
-  async createPayout2(shares: WithdrawRequest[]) : Promise<string | null>{
+  async createPayout2(shares: WithdrawRequest[], numShares: number, payoutId: number) : Promise<string | null>{
 
     let date = new Date()
 
@@ -130,10 +130,10 @@ export class MiningPoolShares {
       await this.db.markPayoutSuccess(shares, transaction.content.hash)
 
       this.discord?.poolPayoutSuccess(
-          0,
+          payoutId,
           transaction.content.hash,
           transactionReceives,
-          0, //sharecount
+          numShares, //sharecount
       )
 
       return transaction.content.hash
