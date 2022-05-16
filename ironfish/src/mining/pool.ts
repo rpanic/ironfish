@@ -43,6 +43,8 @@ export class MiningPool {
   nextMiningRequestId: number
   miningRequestBlocks: LeastRecentlyUsed<number, SerializedBlockTemplate>
   recentSubmissions: Map<number, string[]>
+  recentSubmissionsGeneral: Map<string, number>
+  duplicateThreshold: number
 
   difficulty: bigint
   target: Buffer
@@ -97,6 +99,11 @@ export class MiningPool {
     this.recalculateTargetInterval = null
 
     this.enforcedGraffiti = this.config.get("poolEnforcedGraffiti")
+
+    this.recentSubmissionsGeneral = new Map()
+    this.duplicateThreshold = this.config.get("duplicateThreshold")
+
+    console.log("Duplicate Threshold: " + this.duplicateThreshold)
   }
 
   static async init(options: {
@@ -394,6 +401,7 @@ export class MiningPool {
     const miningRequestId = this.nextMiningRequestId++
     this.miningRequestBlocks.set(miningRequestId, newBlock)
     this.recentSubmissions.clear()
+    this.recentSubmissionsGeneral.clear()
 
     newBlock.header.graffiti = GraffitiUtils.fromString(this.enforcedGraffiti).toString("hex")
 
@@ -413,11 +421,22 @@ export class MiningPool {
   }
 
   private isDuplicateSubmission(clientId: number, randomness: string): boolean {
+    let isDuplicate = false;
+
     const submissions = this.recentSubmissions.get(clientId)
     if (submissions == null) {
-      return false
+      isDuplicate = false
+    }else{
+      isDuplicate = submissions.includes(randomness)
     }
-    return submissions.includes(randomness)
+    
+    const randomnessCount = this.recentSubmissionsGeneral.get(randomness);
+
+    if(randomnessCount == null){
+      return isDuplicate //Since it isn´t duplicate by this criteria, return isDuplicate
+    }else{
+      return isDuplicate || randomnessCount > this.duplicateThreshold //Disregard any shares which have been submitted >duplicateThreshold times
+    }
   }
 
   private addWorkSubmission(clientId: number, randomness: string): void {
@@ -427,6 +446,13 @@ export class MiningPool {
     } else {
       submissions.push(randomness)
       this.recentSubmissions.set(clientId, submissions)
+    }
+
+    const randomnessCount = this.recentSubmissionsGeneral.get(randomness)
+    if(randomnessCount == null){
+      this.recentSubmissionsGeneral.set(randomness, 1)
+    }else{
+      this.recentSubmissionsGeneral.set(randomness, randomnessCount + 1)
     }
   }
 
