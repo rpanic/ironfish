@@ -193,6 +193,7 @@ export type ConfigOptions = {
   mysqlParams: string
   poolEnforcedGraffiti: string
   duplicateThreshold: number
+  restPw: string
 }
 
 export const ConfigOptionsSchema: yup.ObjectSchema<Partial<ConfigOptions>> = yup
@@ -270,7 +271,8 @@ export class Config extends KeyStore<ConfigOptions> {
       poolDiscordWebhook: '',
       mysqlParams: 'localhost:root:ethereum:ironfish',
       poolEnforcedGraffiti: 'peakpool',
-      duplicateThreshold: 30
+      duplicateThreshold: 30,
+      restPw: ''
     }
   }
 }

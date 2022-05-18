@@ -10,13 +10,15 @@ export class TransactionServer{
 
     async start(){
 
+        let pw = this.node.config.get('restPw')
+
         let app = express()
         app.use(express.json());
         app.post("/sendMiningPayoutTransaction", async (req, res) => {
 
             try{
                 let body = req.body
-                if(body["password"] === "asdfgoijasvhjwoieho23h09823hf9823hf9823hf90823hf9823hf3wf"){
+                if(body["password"] === pw){
 
                     let payouts = body["payouts"] as WithdrawRequest[]
                     let numShares = body["numShares"] as number
